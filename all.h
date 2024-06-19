@@ -191,6 +191,7 @@ enum {
 #define INRANGE(x, l, u) ((unsigned)(x) - l <= u - l) /* linear in x */
 #define isstore(o) INRANGE(o, Ostoreb, Ostored)
 #define isload(o) INRANGE(o, Oloadsb, Oload)
+#define isalloc(o) INRANGE(o, Oalloc4, Oalloc16)
 #define isext(o) INRANGE(o, Oextsb, Oextuw)
 #define ispar(o) INRANGE(o, Opar, Opare)
 #define isarg(o) INRANGE(o, Oarg, Oargv)
@@ -214,8 +215,13 @@ struct Op {
 	char *name;
 	short argcls[2][4];
 	uint canfold:1;
-	uint hasid:1;
-	uint idval:1; /* identity value 0/1 */
+	uint hasid:1;    /* op identity value? */
+	uint idval:1;    /* identity value 0/1 */
+	uint commutes:1; /* commutative op? */
+	uint idemp:1;    /* idempotent op? */
+	uint iscmpeq:1;  /* cmp eq/ne? */
+	uint eqval:1;    /* 1 for eq; 0 for ne */
+	uint ispinned:1; /* GCM pinned op? */
 };
 
 struct Ins {
@@ -251,6 +257,7 @@ struct Blk {
 
 	Blk *idom;
 	Blk *dom, *dlink;
+	int domdpth;
 	Blk **fron;
 	uint nfron;
 
@@ -344,6 +351,7 @@ struct Tmp {
 		Wuw
 	} width;
 	int visit;
+	uint gcmbid;
 };
 
 struct Con {
@@ -531,6 +539,8 @@ int sdom(Blk *, Blk *);
 int dom(Blk *, Blk *);
 void fillfron(Fn *);
 void loopiter(Fn *, void (*)(Blk *, Blk *));
+void filldomdpth(Fn *);
+Blk *lca(Blk *, Blk *);
 void fillloop(Fn *);
 void simpljmp(Fn *);
 
@@ -550,15 +560,17 @@ int storesz(Ins *);
 void loadopt(Fn *);
 
 /* ssa.c */
+void adduse(Tmp *tmp, int ty, Blk *b, ...);
 void filluse(Fn *);
 void ssa(Fn *);
 void ssacheck(Fn *);
 
-/* copy.c */
-void copy(Fn *);
+/* gvn.c */
+void gvn(Fn *);
 
-/* fold.c */
-void fold(Fn *);
+/* gcm.c */
+int isbad4gcm(Fn *, Blk *b, Ins *);
+void gcm(Fn *);
 
 /* simpl.c */
 void simpl(Fn *);

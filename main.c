@@ -74,9 +74,13 @@ func(Fn *fn)
 	coalesce(fn);
 	filluse(fn);
 	ssacheck(fn);
-	copy(fn);
+	gvn(fn);
+	fillpreds(fn);
 	filluse(fn);
-	fold(fn);
+	filldom(fn);
+	gcm(fn);
+	filluse(fn);
+	ssacheck(fn);
 	T.abi1(fn);
 	simpl(fn);
 	fillpreds(fn);

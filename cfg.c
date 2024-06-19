@@ -270,6 +270,49 @@ multloop(Blk *hd, Blk *b)
 }
 
 void
+filldomdpth(Fn *fn)
+{
+	Blk *b, *dom;
+	uint dpth;
+
+	for (b=fn->start; b; b=b->link)
+		b->domdpth = -1;
+
+	fn->start->domdpth = 0;
+
+	for (b=fn->start; b; b=b->link) {
+		if (b->domdpth != -1)
+			continue;
+		dpth = 1;
+		for (dom = b->idom; dom->domdpth == -1; dom = dom->idom)
+			dpth++;
+		dpth += dom->domdpth;
+		b->domdpth = dpth;
+		for (dom = b->idom; dom->domdpth == -1; dom = dom->idom)
+			dom->domdpth = --dpth;
+	}
+}
+
+/* least common ancestor in dom tree */
+Blk *
+lca(Blk *b1, Blk *b2)
+{
+	if (!b1)
+		return b2;
+	if (!b2)
+		return b1;
+	while (b1->domdpth > b2->domdpth)
+		b1 = b1->idom;
+	while (b2->domdpth > b1->domdpth)
+		b2 = b2->idom;
+	while (b1 != b2) {
+		b1 = b1->idom;
+		b2 = b2->idom;
+	}
+	return b1;
+}
+
+void
 fillloop(Fn *fn)
 {
 	Blk *b;
