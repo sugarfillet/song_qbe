@@ -364,7 +364,6 @@ sched(Fn *fn)
 	for (bid = 0; bid < fn->nblk; bid++) {
 		if (!bshas(to, bid))
 			continue;
-		b = fn->rpo[bid];
 		nins = bnins[bid];
 		newbins[bid] = alloc(nins * sizeof(Ins));
 	}

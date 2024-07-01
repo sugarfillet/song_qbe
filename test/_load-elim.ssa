@@ -1,5 +1,4 @@
-# checks that phi arguments are correctly
-# handled in alias analysis
+# GCM can eliminate unused add/load instructions
 
 export
 function w $f(l %p, w %c) {
@@ -16,10 +15,3 @@ function w $f(l %p, w %c) {
 @end
         ret 0
 }
-
-# >>> driver
-# extern int f(int);
-# int main() {
-# 	return !(f(0) == 0 && f(1) == 1);
-# }
-# <<<
